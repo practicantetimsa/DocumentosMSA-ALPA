@@ -1,87 +1,219 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Documentos SDS</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentos Mercantil</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background-color: #f9f9f9;
+    }
 
-<style>
-body { font-family: Arial; padding: 20px; }
-input, select { padding: 8px; margin: 10px 5px; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 10px; border-bottom: 1px solid #ccc; }
-a { color: blue; text-decoration: none; }
-</style>
+    header {
+      background-color: #0E5BE6;
+      height: 70px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
+    header img {
+      height: 120px;
+      max-width: 90%;
+    }
+
+    main {
+      padding: 20px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .search-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], select {
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 50px;
+      outline: none;
+      font-size: 14px;
+      min-width: 240px;
+      background: white;
+      transition: 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: #0E5BE6;
+      box-shadow: 0 0 5px rgba(14, 91, 230, 0.4);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #f0f2f5;
+      font-weight: 600;
+      color: #333;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    a {
+      color: #0E5BE6;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      header img {
+        height: 100px;
+      }
+
+      .search-bar {
+        flex-direction: column;
+      }
+
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        background: white;
+      }
+
+      td {
+        text-align: right;
+        position: relative;
+        padding-left: 50%;
+      }
+
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        width: 45%;
+        padding-right: 10px;
+        font-weight: bold;
+        text-align: left;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <header>
+    <img src="logo_mercantil.png" alt="Logo Mercantil S.A.">
+  </header>
 
-<h2>Documentos SDS</h2>
-
-<input type="text" id="busqueda" placeholder="Buscar...">
-<select id="filtro">
-    <option value="">Todas las carpetas</option>
-</select>
-
-<table>
-<thead>
-<tr>
-<th>Nombre</th>
-<th>Carpeta</th>
-<th>Acceso</th>
-</tr>
-</thead>
-<tbody id="tabla"></tbody>
-</table>
-
-<script>
-let datos = [];
-
-fetch('data.json')
-.then(res => res.json())
-.then(data => {
-    datos = data;
-    cargarTabla(data);
-    cargarFiltro();
-});
-
-function cargarTabla(lista) {
-    const tabla = document.getElementById('tabla');
-    tabla.innerHTML = '';
-
-    lista.forEach(doc => {
-        tabla.innerHTML += `
+  <main>
+    <h2>Documentos</h2>
+    <div class="search-bar">
+      <input type="text" id="search" placeholder="Buscar por nombre..." />
+      <select id="folderFilter">
+        <option value="">-- Todas las carpetas --</option>
+      </select>
+    </div>
+    <table>
+      <thead>
         <tr>
-            <td>${doc.nombre}</td>
-            <td>${doc.carpeta}</td>
-            <td><a href="${doc.url}" target    </tr>`;
+          <th>Nombre del archivo</th>
+          <th>Carpeta</th>
+          <th>Acceso</th>
+        </tr>
+      </thead>
+      <tbody id="results"></tbody>
+    </table>
+  </main>
+
+  <script>
+    let data = [];
+
+    async function fetchData() {
+      try {
+        const response = await fetch('data.json');
+        data = await response.json();
+        populateFilter();
+        displayResults(data);
+      } catch (error) {
+        alert("Error cargando el archivo JSON: " + error);
+      }
+    }
+
+    function populateFilter() {
+      const folders = [...new Set(data.map(d => d.carpeta))];
+      const select = document.getElementById("folderFilter");
+      folders.forEach(folder => {
+        const option = document.createElement("option");
+        option.value = folder;
+        option.textContent = folder;
+        select.appendChild(option);
+      });
+    }
+
+    function displayResults(filtered) {
+      const tbody = document.getElementById("results");
+      tbody.innerHTML = "";
+      filtered.forEach(doc => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td data-label="Nombre del archivo">${doc.nombre}</td>
+          <td data-label="Carpeta">${doc.carpeta}</td>
+          <td data-label="Acceso"><a href="${doc.url}" target="_blank">Ver</a></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    document.getElementById("search").addEventListener("input", () => {
+      const term = document.getElementById("search").value.toLowerCase();
+      const folder = document.getElementById("folderFilter").value;
+      const filtered = data.filter(doc =>
+        doc.nombre.toLowerCase().includes(term) &&
+        (folder ? doc.carpeta === folder : true)
+      );
+      displayResults(filtered);
     });
-}
 
-function cargarFiltro() {
-    const filtro = document.getElementById('filtro');
-    const carpetas = [...new Set(datos.map(d => d.carpeta))];
-
-    carpetas.forEach(c => {
-        filtro.innerHTML += `<option value="${c}">${c}</option>`;
-    });
-}
-
-document.getElementById('busqueda').addEventListener('input', filtrar);
-document.getElementById('filtro').addEventListener('change', filtrar);
-
-function filtrar() {
-    const texto = document.getElementById('busqueda').value.toLowerCase();
-    const carpeta = document.getElementById('filtro').value;
-
-    const resultado = datos.filter(d => {
-        return d.nombre.toLowerCase().includes(texto) &&
-               (carpeta === "" || d.carpeta === carpeta);
+    document.getElementById("folderFilter").addEventListener("change", () => {
+      document.getElementById("search").dispatchEvent(new Event('input'));
     });
 
-    cargarTabla(resultado);
-}
-</script>
-
+    fetchData();
+  </script>
 </body>
 </html>
