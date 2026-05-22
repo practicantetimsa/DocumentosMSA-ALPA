@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Documentos SDS</title>
+
+<style>
+body { font-family: Arial; padding: 20px; }
+input, select { padding: 8px; margin: 10px 5px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px; border-bottom: 1px solid #ccc; }
+a { color: blue; text-decoration: none; }
+</style>
+
+</head>
+
+<body>
+
+<h2>Documentos SDS</h2>
+
+<input type="text" id="busqueda" placeholder="Buscar...">
+<select id="filtro">
+    <option value="">Todas las carpetas</option>
+</select>
+
+<table>
+<thead>
+<tr>
+<th>Nombre</th>
+<th>Carpeta</th>
+<th>Acceso</th>
+</tr>
+</thead>
+<tbody id="tabla"></tbody>
+</table>
+
+<script>
+let datos = [];
+
+fetch('data.json')
+.then(res => res.json())
+.then(data => {
+    datos = data;
+    cargarTabla(data);
+    cargarFiltro();
+});
+
+function cargarTabla(lista) {
+    const tabla = document.getElementById('tabla');
+    tabla.innerHTML = '';
+
+    lista.forEach(doc => {
+        tabla.innerHTML += `
+        <tr>
+            <td>${doc.nombre}</td>
+            <td>${doc.carpeta}</td>
+            <td><a href="${doc.url}" target    </tr>`;
+    });
+}
+
+function cargarFiltro() {
+    const filtro = document.getElementById('filtro');
+    const carpetas = [...new Set(datos.map(d => d.carpeta))];
+
+    carpetas.forEach(c => {
+        filtro.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+}
+
+document.getElementById('busqueda').addEventListener('input', filtrar);
+document.getElementById('filtro').addEventListener('change', filtrar);
+
+function filtrar() {
+    const texto = document.getElementById('busqueda').value.toLowerCase();
+    const carpeta = document.getElementById('filtro').value;
+
+    const resultado = datos.filter(d => {
+        return d.nombre.toLowerCase().includes(texto) &&
+               (carpeta === "" || d.carpeta === carpeta);
+    });
+
+    cargarTabla(resultado);
+}
+</script>
+
+</body>
+</html>
